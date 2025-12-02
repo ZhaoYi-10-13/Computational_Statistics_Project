@@ -286,30 +286,6 @@ ci_upper = np.percentile(bootstrap_stats, 97.5)
 3. **Rumor Spreading Models**: Daley, D.J. & Kendall, D.G. (1964)
 4. **Network Epidemics**: Pastor-Satorras, R. & Vespignani, A. (2001)
 
----
-
-## 👥 Team Members
-
-| Name | Student ID | Contribution |
-|------|------------|--------------|
-| Member 1 | XXXXXXXXXX | Model Implementation |
-| Member 2 | XXXXXXXXXX | Monte Carlo Analysis |
-| Member 3 | XXXXXXXXXX | Visualization & Report |
-| Member 4 | XXXXXXXXXX | Network Analysis |
-
-*(Please update with actual team member information)*
-
----
-
-## 📋 AI Usage Declaration
-
-We declare this project represents our own work. All sources have been properly acknowledged.
-
-**AI tools usage**: ___% 
-
-*(To be filled by team members)*
-
----
 
 *DS3063 Computational Statistics*  
 *Fall 2025*
