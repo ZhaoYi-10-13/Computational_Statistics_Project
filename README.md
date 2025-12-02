@@ -96,16 +96,6 @@ Computational_Statistics_Project/
 │   ├── isr_model.py            # ISR model implementation
 │   ├── monte_carlo_analysis.py # MC and bootstrap analysis
 │   └── visualization.py        # Plotting functions
-└── outputs/                    # Generated figures (after running, not in repo)
-    ├── fig1_single_simulation.png
-    ├── fig2_beta_comparison.png
-    ├── fig3_mc_convergence.png
-    ├── fig4_bootstrap_ci.png
-    ├── fig5_sensitivity_alpha.png
-    ├── fig6_sensitivity_beta.png
-    ├── fig7_critical_threshold.png
-    ├── fig8_network_comparison.png
-    └── fig9_comprehensive_summary.png
 ```
 
 ---
