@@ -90,15 +90,18 @@ def run_basic_simulation_analysis():
     print_header("Part 1: Basic ISR Model Simulation")
     
     # Parameters for basic demonstration
+    # Using smaller alpha to show meaningful dynamics
     N = 1000  # Population size
+    alpha = 0.003  # Lower spreading rate for interesting dynamics
+    beta = 0.08    # Stifling rate
     
     # Run single simulation
     print("Running single simulation with default parameters...")
     print(f"  Population: N = {N}")
-    print(f"  Spreading rate: α = 0.10")
-    print(f"  Stifling rate: β = 0.05")
+    print(f"  Spreading rate: α = {alpha}")
+    print(f"  Stifling rate: β = {beta}")
     
-    result = run_single_simulation(N=N, alpha=0.10, beta=0.05, seed=42)
+    result = run_single_simulation(N=N, alpha=alpha, beta=beta, seed=42)
     
     print(f"\nResults:")
     print(f"  Final spread: {result['final_size']:.2%} of population heard the information")
@@ -108,20 +111,21 @@ def run_basic_simulation_analysis():
     # Plot single simulation
     fig = plot_single_simulation(
         result['history'],
-        title=f"ISR Model Simulation (N={N}, α=0.10, β=0.05)",
+        title=f"ISR Model Simulation (N={N}, α={alpha}, β={beta})",
         save_path=os.path.join(OUTPUT_DIR, 'fig1_single_simulation.png')
     )
     plt.close(fig)
     
     # Compare different beta values (similar to SIR analysis in course)
+    # Using lower alpha to show clearer differences
     print("\n\nComparing different stifling rates (β)...")
-    beta_values = [0.02, 0.05, 0.10, 0.15]
+    beta_values = [0.05, 0.10, 0.15, 0.25]
     results_list = []
     
-    for beta in beta_values:
-        result = run_single_simulation(N=N, alpha=0.10, beta=beta, seed=42)
-        results_list.append(result)
-        print(f"  β = {beta:.2f}: Final spread = {result['final_size']:.2%}")
+    for beta_val in beta_values:
+        result_comp = run_single_simulation(N=N, alpha=0.005, beta=beta_val, seed=42)
+        results_list.append(result_comp)
+        print(f"  β = {beta_val:.2f}: Final spread = {result_comp['final_size']:.2%}")
     
     fig = plot_parameter_comparison(
         results_list, 'β', beta_values,
@@ -143,14 +147,16 @@ def run_monte_carlo_analysis():
     
     # Initialize analyzer
     M = 1000  # Number of Monte Carlo simulations
+    # Using parameters that produce variable outcomes
+    N, alpha, beta = 500, 0.004, 0.10
     print(f"Running M = {M} Monte Carlo simulations...")
-    print(f"  Parameters: N=500, α=0.12, β=0.08\n")
+    print(f"  Parameters: N={N}, α={alpha}, β={beta}\n")
     
     analyzer = MonteCarloAnalyzer(n_simulations=M, seed=2024)
     
     # Run Monte Carlo
     mc_results = analyzer.run_monte_carlo(
-        N=500, alpha=0.12, beta=0.08, show_progress=True
+        N=N, alpha=alpha, beta=beta, show_progress=True
     )
     
     # Print results with standard errors (Chapter 4 concept)
@@ -246,11 +252,12 @@ def run_sensitivity_analysis(analyzer):
     """
     print_header("Part 4: Parameter Sensitivity Analysis")
     
-    base_params = {'N': 500, 'alpha': 0.10, 'beta': 0.08}
+    # Use parameters in the interesting regime where spread varies
+    base_params = {'N': 500, 'alpha': 0.004, 'beta': 0.10}
     
     # Sensitivity to spreading rate (alpha)
     print("Analyzing sensitivity to spreading rate (α)...")
-    alpha_values = np.linspace(0.05, 0.25, 15)
+    alpha_values = np.linspace(0.001, 0.015, 15)
     
     sensitivity_alpha = analyzer.parameter_sensitivity(
         param_name='alpha',
@@ -268,7 +275,7 @@ def run_sensitivity_analysis(analyzer):
     
     # Sensitivity to stifling rate (beta)
     print("\nAnalyzing sensitivity to stifling rate (β)...")
-    beta_values = np.linspace(0.02, 0.20, 15)
+    beta_values = np.linspace(0.03, 0.30, 15)
     
     sensitivity_beta = analyzer.parameter_sensitivity(
         param_name='beta',
@@ -326,28 +333,32 @@ def run_critical_threshold_analysis(analyzer):
     print("\nCritical Behavior Analysis:")
     print("-" * 50)
     
-    # Case 1: N*α > β (expected to spread)
+    # Case 1: N*α > β (expected to spread widely)
+    # R0-like = N*α/β > 1
     print("\nCase 1: N·α > β (super-critical regime)")
-    alpha1, beta1 = 0.01, 0.02  # N*α = 5 > β = 0.02
+    alpha1, beta1 = 0.008, 0.05  # N*α = 4 > β = 0.05, R0-like = 80
     result1 = analyzer.run_monte_carlo(N=N, alpha=alpha1, beta=beta1, n_sims=200, show_progress=False)
     print(f"  α = {alpha1}, β = {beta1}")
     print(f"  N·α = {N*alpha1:.2f}, β = {beta1}")
+    print(f"  R0-like (N·α/β) = {N*alpha1/beta1:.2f}")
     print(f"  Expected final spread: {result1['final_size']['mean']:.2%}")
     
-    # Case 2: N*α ≈ β (critical)
+    # Case 2: N*α ≈ β (critical regime)
     print("\nCase 2: N·α ≈ β (critical regime)")
-    alpha2, beta2 = 0.01, 0.05  # N*α = 5 ≈ β = 0.05
+    alpha2, beta2 = 0.003, 0.15  # N*α = 1.5 ≈ β = 0.15, R0-like ≈ 10
     result2 = analyzer.run_monte_carlo(N=N, alpha=alpha2, beta=beta2, n_sims=200, show_progress=False)
     print(f"  α = {alpha2}, β = {beta2}")
     print(f"  N·α = {N*alpha2:.2f}, β = {beta2}")
+    print(f"  R0-like (N·α/β) = {N*alpha2/beta2:.2f}")
     print(f"  Expected final spread: {result2['final_size']['mean']:.2%}")
     
-    # Case 3: N*α < β (expected to die out)
+    # Case 3: N*α < β (expected to die out quickly)
     print("\nCase 3: N·α < β (sub-critical regime)")
-    alpha3, beta3 = 0.005, 0.15  # N*α = 2.5 < β = 0.15
+    alpha3, beta3 = 0.001, 0.25  # N*α = 0.5 < β = 0.25, R0-like = 2
     result3 = analyzer.run_monte_carlo(N=N, alpha=alpha3, beta=beta3, n_sims=200, show_progress=False)
     print(f"  α = {alpha3}, β = {beta3}")
     print(f"  N·α = {N*alpha3:.2f}, β = {beta3}")
+    print(f"  R0-like (N·α/β) = {N*alpha3/beta3:.2f}")
     print(f"  Expected final spread: {result3['final_size']['mean']:.2%}")
     
     return threshold_results
@@ -363,16 +374,17 @@ def run_hypothesis_testing():
     print_header("Part 6: Type I and Type II Error Analysis")
     
     print("Testing hypothesis about information spread:")
-    print("  H0: Spread proportion ≤ 0.3 (limited spread)")
-    print("  H1: Spread proportion > 0.3 (viral spread)\n")
+    print("  H0: Spread proportion ≤ 0.5 (limited spread)")
+    print("  H1: Spread proportion > 0.5 (viral spread)\n")
     
-    # Type I Error: Test with parameters where H0 is true
+    # Type I Error: Test with parameters where H0 is true (spread should be ≤ 0.5)
+    # Using low alpha and high beta to limit spread
     print("Estimating Type I Error (false positive rate)...")
-    print("  Using parameters where H0 is true: α=0.08, β=0.15")
+    print("  Using parameters where H0 is true: α=0.002, β=0.20")
     
     type1_result = estimate_type1_error(
-        N=500, alpha=0.08, beta=0.15,
-        null_threshold=0.3,
+        N=500, alpha=0.002, beta=0.20,
+        null_threshold=0.5,
         n_simulations=500
     )
     
@@ -382,13 +394,14 @@ def run_hypothesis_testing():
     print(f"    95% CI: [{type1_result['ci_lower']:.4f}, {type1_result['ci_upper']:.4f}]")
     print(f"    True mean spread: {type1_result['true_mean']:.4f}")
     
-    # Power: Test with parameters where H1 is true
+    # Power: Test with parameters where H1 is true (spread should be > 0.5)
+    # Using higher alpha to ensure viral spread
     print("\n\nEstimating Power (1 - Type II Error)...")
-    print("  Using parameters where H1 is true: α=0.15, β=0.05")
+    print("  Using parameters where H1 is true: α=0.008, β=0.08")
     
     power_result = estimate_power(
-        N=500, alpha=0.15, beta=0.05,
-        null_threshold=0.3,
+        N=500, alpha=0.008, beta=0.08,
+        null_threshold=0.5,
         n_simulations=500
     )
     
@@ -411,7 +424,8 @@ def run_network_comparison():
     print_header("Part 7: Network Topology Comparison")
     
     N = 200  # Smaller for network simulations
-    alpha, beta = 0.3, 0.1
+    # Using moderate parameters for network comparison
+    alpha, beta = 0.15, 0.10
     n_sims = 50
     
     network_types = ['complete', 'random', 'small_world', 'scale_free']
